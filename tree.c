@@ -223,7 +223,6 @@ int tree_from_index(ObjectID *id_out) {
     // Step 2: If index is empty, nothing to commit
     if (idx.count == 0) return -1;
 
-    // TODO: Build tree hierarchy recursively from index entries
-    (void)id_out;
-    return -1;
+    // Step 3: Build tree hierarchy recursively starting from root (empty prefix)
+    return write_tree_recursive(idx.entries, idx.count, "", 0, id_out);
 }
