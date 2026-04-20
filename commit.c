@@ -222,7 +222,16 @@ int commit_create(const char *message, ObjectID *commit_id_out) {
     strncpy(commit.message, message, sizeof(commit.message) - 1);
     commit.message[sizeof(commit.message) - 1] = '\0';
 
-    // TODO: Serialize, write to store, and update HEAD
+    // Step 4: Serialize the commit to text format
+    void *commit_data;
+    size_t commit_len;
+    if (commit_serialize(&commit, &commit_data, &commit_len) != 0) {
+        fprintf(stderr, "error: failed to serialize commit\n");
+        return -1;
+    }
+
+    // TODO: Write to object store and update HEAD
     (void)commit_id_out;
+    free(commit_data);
     return -1;
 }
