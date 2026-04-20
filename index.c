@@ -226,8 +226,61 @@ int index_save(const Index *index) {
 //
 // Returns 0 on success, -1 on error.
 int index_add(Index *index, const char *path) {
-    // TODO: Implement file staging
-    // (See Lab Appendix for logical steps)
-    (void)index; (void)path;
-    return -1;
+    // Step 1: Get file metadata using stat
+    struct stat st;
+    if (stat(path, &st) != 0) {
+        fprintf(stderr, "error: cannot stat '%s'\n", path);
+        return -1;
+    }
+
+    // Step 2: Read the file contents
+    FILE *f = fopen(path, "rb");
+    if (!f) {
+        fprintf(stderr, "error: cannot open '%s'\n", path);
+        return -1;
+    }
+
+    void *content = malloc(st.st_size);
+    if (!content) {
+        fclose(f);
+        return -1;
+    }
+
+    if (st.st_size > 0 && fread(content, 1, st.st_size, f) != (size_t)st.st_size) {
+        free(content);
+        fclose(f);
+        return -1;
+    }
+    fclose(f);
+
+    // Step 3: Write file contents as a blob to the object store
+    ObjectID blob_id;
+    if (object_write(OBJ_BLOB, content, st.st_size, &blob_id) != 0) {
+        free(content);
+        return -1;
+    }
+    free(content);
+
+    // Step 4: Update or add entry in the index
+    IndexEntry *existing = index_find(index, path);
+    if (existing) {
+        // Update existing entry
+        existing->hash = blob_id;
+        existing->mtime_sec = (uint64_t)st.st_mtime;
+        existing->size = (uint32_t)st.st_size;
+        existing->mode = (st.st_mode & S_IXUSR) ? 0100755 : 0100644;
+    } else {
+        // Add new entry
+        if (index->count >= MAX_INDEX_ENTRIES) return -1;
+        IndexEntry *entry = &index->entries[index->count++];
+        entry->hash = blob_id;
+        entry->mtime_sec = (uint64_t)st.st_mtime;
+        entry->size = (uint32_t)st.st_size;
+        entry->mode = (st.st_mode & S_IXUSR) ? 0100755 : 0100644;
+        strncpy(entry->path, path, sizeof(entry->path) - 1);
+        entry->path[sizeof(entry->path) - 1] = '\0';
+    }
+
+    // Step 5: Save the updated index to disk
+    return index_save(index);
 }
