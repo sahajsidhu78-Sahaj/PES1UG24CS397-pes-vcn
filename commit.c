@@ -205,7 +205,16 @@ int commit_create(const char *message, ObjectID *commit_id_out) {
     }
     commit.tree = tree_id;
 
-    // TODO: Remaining commit creation steps in next commits
+    // Step 2: Read current HEAD as the parent commit
+    ObjectID parent_id;
+    if (head_read(&parent_id) == 0) {
+        commit.parent = parent_id;
+        commit.has_parent = 1;
+    } else {
+        commit.has_parent = 0; // First commit has no parent
+    }
+
+    // TODO: Remaining commit creation steps (author, serialize, write, update)
     (void)message; (void)commit_id_out;
     return -1;
 }
