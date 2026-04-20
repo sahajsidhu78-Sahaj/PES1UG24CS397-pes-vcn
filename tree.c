@@ -115,7 +115,22 @@ int tree_serialize(const Tree *tree, void **data_out, size_t *len_out) {
     return 0;
 }
 
+// Forward declaration for object.c functions
+int object_write(ObjectType type, const void *data, size_t len, ObjectID *id_out);
+
 // ─── TODO: Implement these ──────────────────────────────────────────────────
+
+// Recursive helper: build a tree for entries sharing a common prefix.
+// 'prefix' is the directory prefix (e.g., "" for root, "src/" for src dir).
+// 'prefix_len' is the length of the prefix string.
+// Processes only index entries whose paths start with the given prefix.
+static int write_tree_recursive(const IndexEntry *entries, int count,
+                                 const char *prefix, size_t prefix_len,
+                                 ObjectID *id_out) {
+    // TODO: Will be implemented in next commits
+    (void)entries; (void)count; (void)prefix; (void)prefix_len; (void)id_out;
+    return -1;
+}
 
 // Build a tree hierarchy from the current index and write all tree
 // objects to the object store.
