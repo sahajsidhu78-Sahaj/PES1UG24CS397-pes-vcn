@@ -163,6 +163,10 @@ int index_load(Index *index) {
         index->count++;
     }
 
+    if (index->count >= MAX_INDEX_ENTRIES) {
+        fprintf(stderr, "warning: index reached maximum capacity of %d entries\n", MAX_INDEX_ENTRIES);
+    }
+
     fclose(f);
     return 0;
 }
