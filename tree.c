@@ -127,8 +127,40 @@ int object_write(ObjectType type, const void *data, size_t len, ObjectID *id_out
 static int write_tree_recursive(const IndexEntry *entries, int count,
                                  const char *prefix, size_t prefix_len,
                                  ObjectID *id_out) {
-    // TODO: Will be implemented in next commits
-    (void)entries; (void)count; (void)prefix; (void)prefix_len; (void)id_out;
+    Tree tree;
+    tree.count = 0;
+
+    int i = 0;
+    while (i < count) {
+        // Skip entries that don't match our prefix
+        if (strncmp(entries[i].path, prefix, prefix_len) != 0) {
+            i++;
+            continue;
+        }
+
+        // Get the path relative to the current prefix
+        const char *relative = entries[i].path + prefix_len;
+
+        // Check if this entry has a subdirectory component
+        const char *slash = strchr(relative, '/');
+
+        if (slash == NULL) {
+            // This is a direct file (blob) in this directory
+            TreeEntry *te = &tree.entries[tree.count++];
+            te->mode = entries[i].mode;
+            te->hash = entries[i].hash;
+            strncpy(te->name, relative, sizeof(te->name) - 1);
+            te->name[sizeof(te->name) - 1] = '\0';
+            i++;
+        } else {
+            // This is a subdirectory — need to handle recursively
+            // TODO: Handle subdirectories in next commit
+            i++;
+        }
+    }
+
+    // TODO: Serialize tree and write to object store in next commit
+    (void)id_out;
     return -1;
 }
 
