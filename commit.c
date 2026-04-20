@@ -230,8 +230,14 @@ int commit_create(const char *message, ObjectID *commit_id_out) {
         return -1;
     }
 
-    // TODO: Write to object store and update HEAD
-    (void)commit_id_out;
+    // Step 5: Write the serialized text to the object store as OBJ_COMMIT
+    if (object_write(OBJ_COMMIT, commit_data, commit_len, commit_id_out) != 0) {
+        fprintf(stderr, "error: failed to write commit object\n");
+        free(commit_data);
+        return -1;
+    }
+
+    // TODO: Update HEAD
     free(commit_data);
     return -1;
 }
