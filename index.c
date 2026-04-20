@@ -227,6 +227,10 @@ int index_save(const Index *index) {
 // Returns 0 on success, -1 on error.
 int index_add(Index *index, const char *path) {
     // Step 1: Get file metadata using stat
+    if (strlen(path) >= 512) {
+        fprintf(stderr, "error: path too long '%s'\n", path);
+        return -1;
+    }
     struct stat st;
     if (stat(path, &st) != 0) {
         fprintf(stderr, "error: cannot stat '%s'\n", path);
