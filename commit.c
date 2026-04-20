@@ -214,7 +214,15 @@ int commit_create(const char *message, ObjectID *commit_id_out) {
         commit.has_parent = 0; // First commit has no parent
     }
 
-    // TODO: Remaining commit creation steps (author, serialize, write, update)
-    (void)message; (void)commit_id_out;
+    // Step 3: Populate author, timestamp, and message
+    strncpy(commit.author, pes_author(), sizeof(commit.author) - 1);
+    commit.author[sizeof(commit.author) - 1] = '\0';
+    commit.timestamp = (uint64_t)time(NULL);
+
+    strncpy(commit.message, message, sizeof(commit.message) - 1);
+    commit.message[sizeof(commit.message) - 1] = '\0';
+
+    // TODO: Serialize, write to store, and update HEAD
+    (void)commit_id_out;
     return -1;
 }
