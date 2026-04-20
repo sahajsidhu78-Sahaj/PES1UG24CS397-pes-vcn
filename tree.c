@@ -153,9 +153,35 @@ static int write_tree_recursive(const IndexEntry *entries, int count,
             te->name[sizeof(te->name) - 1] = '\0';
             i++;
         } else {
-            // This is a subdirectory — need to handle recursively
-            // TODO: Handle subdirectories in next commit
-            i++;
+            // This is a subdirectory — extract dir name and recurse
+            size_t dir_name_len = slash - relative;
+            char dir_name[256];
+            if (dir_name_len >= sizeof(dir_name)) { i++; continue; }
+            memcpy(dir_name, relative, dir_name_len);
+            dir_name[dir_name_len] = '\0';
+
+            // Build new prefix for the subdirectory (e.g., "src/")
+            char new_prefix[512];
+            snprintf(new_prefix, sizeof(new_prefix), "%s%s/", prefix, dir_name);
+            size_t new_prefix_len = strlen(new_prefix);
+
+            // Recursively build subtree for this directory
+            ObjectID subtree_id;
+            if (write_tree_recursive(entries, count, new_prefix, new_prefix_len, &subtree_id) != 0) {
+                return -1;
+            }
+
+            // Add subtree entry to the current tree
+            TreeEntry *te = &tree.entries[tree.count++];
+            te->mode = MODE_DIR;
+            te->hash = subtree_id;
+            strncpy(te->name, dir_name, sizeof(te->name) - 1);
+            te->name[sizeof(te->name) - 1] = '\0';
+
+            // Skip all remaining entries with the same subdirectory prefix
+            while (i < count && strncmp(entries[i].path, new_prefix, new_prefix_len) == 0) {
+                i++;
+            }
         }
     }
 
