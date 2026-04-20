@@ -125,7 +125,32 @@ int object_write(ObjectType type, const void *data, size_t len, ObjectID *id_out
         return 0; // Object already stored, nothing to do
     }
 
-    // TODO: Steps 6-9 (create shard dir, write temp file, rename) will be added next
+    // Step 6: Create shard directory (.pes/objects/XX/)
+    char hex[HASH_HEX_SIZE + 1];
+    hash_to_hex(id_out, hex);
+    char shard_dir[512];
+    snprintf(shard_dir, sizeof(shard_dir), "%s/%.2s", OBJECTS_DIR, hex);
+    mkdir(shard_dir, 0755); // OK if already exists
+
+    // Step 7: Write to a temporary file in the shard directory
+    char tmp_path[512];
+    snprintf(tmp_path, sizeof(tmp_path), "%s/tmp_XXXXXX", shard_dir);
+    int fd = mkstemp(tmp_path);
+    if (fd < 0) {
+        free(full_object);
+        return -1;
+    }
+
+    ssize_t written = write(fd, full_object, full_len);
+    if (written != (ssize_t)full_len) {
+        close(fd);
+        unlink(tmp_path);
+        free(full_object);
+        return -1;
+    }
+
+    // TODO: Steps 8-9 (fsync, rename) will be added next
+    close(fd);
     free(full_object);
     return -1;
 }
