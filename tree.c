@@ -185,9 +185,21 @@ static int write_tree_recursive(const IndexEntry *entries, int count,
         }
     }
 
-    // TODO: Serialize tree and write to object store in next commit
-    (void)id_out;
-    return -1;
+    // Serialize the tree to binary format
+    void *tree_data;
+    size_t tree_len;
+    if (tree_serialize(&tree, &tree_data, &tree_len) != 0) {
+        return -1;
+    }
+
+    // Write tree object to the store
+    if (object_write(OBJ_TREE, tree_data, tree_len, id_out) != 0) {
+        free(tree_data);
+        return -1;
+    }
+
+    free(tree_data);
+    return 0;
 }
 
 // Build a tree hierarchy from the current index and write all tree
