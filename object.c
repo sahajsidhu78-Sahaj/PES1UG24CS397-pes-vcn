@@ -246,7 +246,29 @@ int object_read(const ObjectID *id, ObjectType *type_out, void **data_out, size_
         return -1;
     }
 
-    // TODO: Integrity verification and data extraction in next commit
+    // Step 4: Verify integrity — recompute SHA-256 and compare to expected hash
+    ObjectID computed_id;
+    compute_hash(file_data, file_size, &computed_id);
+    if (memcmp(computed_id.hash, id->hash, HASH_SIZE) != 0) {
+        free(file_data);
+        return -1; // Integrity check failed — data is corrupted
+    }
+
+    // Step 5: Extract the data portion (everything after the null byte)
+    size_t header_size = (null_byte - file_data) + 1; // +1 to skip the null byte
+    size_t data_len = file_size - header_size;
+
+    // Step 6: Allocate buffer and copy the data portion
+    uint8_t *data_copy = malloc(data_len);
+    if (!data_copy) {
+        free(file_data);
+        return -1;
+    }
+    memcpy(data_copy, file_data + header_size, data_len);
+
+    *data_out = data_copy;
+    *len_out = data_len;
+
     free(file_data);
-    return -1;
+    return 0;
 }
