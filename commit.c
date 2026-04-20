@@ -237,7 +237,13 @@ int commit_create(const char *message, ObjectID *commit_id_out) {
         return -1;
     }
 
-    // TODO: Update HEAD
+    // Step 6: Update HEAD (or branch) to point to the new commit
+    if (head_update(commit_id_out) != 0) {
+        fprintf(stderr, "error: failed to update HEAD\n");
+        free(commit_data);
+        return -1;
+    }
+
     free(commit_data);
-    return -1;
+    return 0;
 }
