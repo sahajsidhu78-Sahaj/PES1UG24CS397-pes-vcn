@@ -119,7 +119,13 @@ int object_write(ObjectType type, const void *data, size_t len, ObjectID *id_out
     // Step 4: Compute SHA-256 hash of the full object
     compute_hash(full_object, full_len, id_out);
 
-    // TODO: Steps 5-9 (dedup check, write to disk) will be added next
+    // Step 5: Check if object already exists (deduplication)
+    if (object_exists(id_out)) {
+        free(full_object);
+        return 0; // Object already stored, nothing to do
+    }
+
+    // TODO: Steps 6-9 (create shard dir, write temp file, rename) will be added next
     free(full_object);
     return -1;
 }
