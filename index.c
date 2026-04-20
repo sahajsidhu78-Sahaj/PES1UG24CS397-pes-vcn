@@ -135,10 +135,17 @@ int index_status(const Index *index) {
 //
 // Returns 0 on success, -1 on error.
 int index_load(Index *index) {
-    // TODO: Implement index loading
-    // (See Lab Appendix for logical steps)
-    (void)index;
-    return -1;
+    index->count = 0;
+
+    // Open the index file; if it doesn't exist, return empty index (not an error)
+    FILE *f = fopen(INDEX_FILE, "r");
+    if (!f) {
+        return 0; // No index file yet — empty index is valid
+    }
+
+    // TODO: Parse entries from the file in next commit
+    fclose(f);
+    return 0;
 }
 
 // Save the index to .pes/index atomically.
