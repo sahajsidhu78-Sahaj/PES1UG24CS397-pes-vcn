@@ -143,7 +143,26 @@ int index_load(Index *index) {
         return 0; // No index file yet — empty index is valid
     }
 
-    // TODO: Parse entries from the file in next commit
+    // Parse each line: <mode> <hash-hex> <mtime> <size> <path>
+    char hex[HASH_HEX_SIZE + 1];
+    while (index->count < MAX_INDEX_ENTRIES) {
+        IndexEntry *entry = &index->entries[index->count];
+        uint64_t mtime;
+        uint32_t mode, size;
+
+        int matched = fscanf(f, "%o %64s %lu %u %511s",
+                             &mode, hex, &mtime, &size, entry->path);
+        if (matched != 5) break; // End of file or parse error
+
+        entry->mode = mode;
+        entry->mtime_sec = mtime;
+        entry->size = size;
+
+        if (hex_to_hash(hex, &entry->hash) != 0) break;
+
+        index->count++;
+    }
+
     fclose(f);
     return 0;
 }
